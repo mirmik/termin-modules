@@ -7,11 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(cmake/TerminModule.cmake)
 
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
-execute_process(
-    COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
-    OUTPUT_VARIABLE nanobind_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
 find_package(nanobind CONFIG REQUIRED)
 find_package(termin_base REQUIRED)
 
@@ -37,10 +32,6 @@ target_link_libraries(termin_modules
         Python::Python
         ${CMAKE_DL_LIBS}
 )
-
-if(NOT TARGET nanobind)
-    nanobind_build_library(nanobind)
-endif()
 
 nanobind_add_module(_termin_modules_native NB_SHARED
     python/bindings/termin_modules_module.cpp

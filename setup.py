@@ -4,6 +4,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import os
 
 from setuptools import Extension, setup
 from setuptools.command.build import build as _build
@@ -11,6 +12,13 @@ from setuptools.command.build_ext import build_ext
 
 
 ROOT = Path(__file__).resolve().parent
+
+
+def _split_prefix_path(raw):
+    if not raw:
+        return []
+    normalized = raw.replace(";", os.pathsep)
+    return [part for part in normalized.split(os.pathsep) if part]
 
 
 class CMakeBuild(_build):
@@ -46,6 +54,10 @@ class CMakeBuildExt(build_ext):
             f"-DCMAKE_BUILD_TYPE={cfg}",
             f"-DPython_EXECUTABLE={sys.executable}",
         ]
+
+        prefix_paths = _split_prefix_path(os.environ.get("CMAKE_PREFIX_PATH"))
+        if prefix_paths:
+            cmake_args.append(f"-DCMAKE_PREFIX_PATH={';'.join(prefix_paths)}")
 
         subprocess.check_call(["cmake", *cmake_args], cwd=build_temp)
         subprocess.check_call(

@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/termin_modules_example.dir/examples/basic/main.cpp.o -o termin_modules_example  -Wl,-rpath,/home/rfmeas/project/termin-env/termin-modules/build/termin-base:/home/rfmeas/.pyenv/versions/3.10.19/lib libtermin_modules.a termin-base/libtermin_base.so /home/rfmeas/.pyenv/versions/3.10.19/lib/libpython3.10.so -ldl 

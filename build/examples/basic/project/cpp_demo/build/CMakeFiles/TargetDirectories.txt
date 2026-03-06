@@ -1,0 +1,3 @@
+/home/rfmeas/project/termin-env/termin-modules/build/examples/basic/project/cpp_demo/build/CMakeFiles/cpp_demo.dir
+/home/rfmeas/project/termin-env/termin-modules/build/examples/basic/project/cpp_demo/build/CMakeFiles/edit_cache.dir
+/home/rfmeas/project/termin-env/termin-modules/build/examples/basic/project/cpp_demo/build/CMakeFiles/rebuild_cache.dir

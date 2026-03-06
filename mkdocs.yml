@@ -1,0 +1,10 @@
+site_name: termin-modules
+site_description: Система загрузки модулей для проектов termin
+theme:
+  name: material
+
+nav:
+  - Главная: index.md
+  - Дескрипторы: descriptors.md
+  - Жизненный цикл: lifecycle.md
+  - Python API: python-api.md

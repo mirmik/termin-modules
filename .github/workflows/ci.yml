@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+env:
+  LD_LIBRARY_PATH: /opt/termin/lib
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Python dependencies
+        run: pip install --upgrade pip setuptools wheel nanobind
+
+      - name: Build C++ runtime and example
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPython_EXECUTABLE=$(which python3)
+          cmake --build build --parallel
+
+      - name: Run example
+        run: ./build/termin_modules_example
+
+      - name: Build wheel
+        run: pip wheel --no-build-isolation --no-deps -w dist .
+
+      - name: Install wheel and import package
+        run: |
+          pip install dist/termin_modules-*.whl
+          python3 - <<'PY'
+          import termin_modules
+          rt = termin_modules.ModuleRuntime()
+          env = termin_modules.ModuleEnvironment()
+          env.python_executable = "python3"
+          rt.set_environment(env)
+          rt.register_cpp_backend(termin_modules.CppModuleBackend())
+          rt.register_python_backend(termin_modules.PythonModuleBackend())
+          print("termin_modules import ok", termin_modules.ModuleKind.Cpp)
+          PY

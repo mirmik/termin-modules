@@ -7,4 +7,5 @@ nav:
   - Главная: index.md
   - Дескрипторы: descriptors.md
   - Жизненный цикл: lifecycle.md
+  - Коллбеки: callbacks.md
   - Python API: python-api.md

@@ -10,14 +10,12 @@ public:
 
     bool load(
         ModuleRecord& record,
-        const ModuleEnvironment& environment,
-        IModuleIntegration* integration
+        const ModuleEnvironment& environment
     ) override;
 
     bool unload(
         ModuleRecord& record,
-        const ModuleEnvironment& environment,
-        IModuleIntegration* integration
+        const ModuleEnvironment& environment
     ) override;
 
 private:

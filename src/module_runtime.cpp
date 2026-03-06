@@ -26,8 +26,12 @@ void ModuleRuntime::set_environment(ModuleEnvironment environment) {
     _environment = std::move(environment);
 }
 
-void ModuleRuntime::set_integration(std::shared_ptr<IModuleIntegration> integration) {
-    _integration = std::move(integration);
+void ModuleRuntime::set_cpp_callbacks(CppModuleCallbacks callbacks) {
+    _cpp_callbacks = std::move(callbacks);
+}
+
+void ModuleRuntime::set_python_callbacks(PythonModuleCallbacks callbacks) {
+    _python_callbacks = std::move(callbacks);
 }
 
 void ModuleRuntime::set_event_callback(ModuleEventCallback callback) {
@@ -171,18 +175,30 @@ bool ModuleRuntime::load_module(const std::string& module_id) {
     }
 
     emit(ModuleEventKind::Loading, module_id);
-    if (_integration) {
-        _integration->before_load(*target);
+    if (target->spec.kind == ModuleKind::Cpp) {
+        if (_cpp_callbacks.before_load) {
+            _cpp_callbacks.before_load(*target);
+        }
+    } else {
+        if (_python_callbacks.before_load) {
+            _python_callbacks.before_load(*target);
+        }
     }
 
-    if (!backend->load(*target, _environment, _integration.get())) {
+    if (!backend->load(*target, _environment)) {
         target->state = ModuleState::Failed;
         if (target->error_message.empty()) {
             target->error_message = "Backend load failed";
         }
         _last_error = target->error_message;
-        if (_integration) {
-            _integration->after_failed_load(*target, target->error_message);
+        if (target->spec.kind == ModuleKind::Cpp) {
+            if (_cpp_callbacks.after_failed_load) {
+                _cpp_callbacks.after_failed_load(*target, target->error_message);
+            }
+        } else {
+            if (_python_callbacks.after_failed_load) {
+                _python_callbacks.after_failed_load(*target, target->error_message);
+            }
         }
         emit(ModuleEventKind::Failed, module_id, target->error_message);
         return false;
@@ -190,8 +206,14 @@ bool ModuleRuntime::load_module(const std::string& module_id) {
 
     target->state = ModuleState::Loaded;
     target->error_message.clear();
-    if (_integration) {
-        _integration->after_load(*target);
+    if (target->spec.kind == ModuleKind::Cpp) {
+        if (_cpp_callbacks.after_load) {
+            _cpp_callbacks.after_load(*target);
+        }
+    } else {
+        if (_python_callbacks.after_load) {
+            _python_callbacks.after_load(*target);
+        }
     }
     emit(ModuleEventKind::Loaded, module_id);
     return true;
@@ -217,11 +239,17 @@ bool ModuleRuntime::unload_module(const std::string& module_id) {
     }
 
     emit(ModuleEventKind::Unloading, module_id);
-    if (_integration) {
-        _integration->before_unload(*target);
+    if (target->spec.kind == ModuleKind::Cpp) {
+        if (_cpp_callbacks.before_unload) {
+            _cpp_callbacks.before_unload(*target);
+        }
+    } else {
+        if (_python_callbacks.before_unload) {
+            _python_callbacks.before_unload(*target);
+        }
     }
 
-    if (!backend->unload(*target, _environment, _integration.get())) {
+    if (!backend->unload(*target, _environment)) {
         if (target->error_message.empty()) {
             target->error_message = "Backend unload failed";
         }
@@ -233,8 +261,14 @@ bool ModuleRuntime::unload_module(const std::string& module_id) {
     target->state = ModuleState::Unloaded;
     target->handle.reset();
     target->error_message.clear();
-    if (_integration) {
-        _integration->after_unload(*target);
+    if (target->spec.kind == ModuleKind::Cpp) {
+        if (_cpp_callbacks.after_unload) {
+            _cpp_callbacks.after_unload(*target);
+        }
+    } else {
+        if (_python_callbacks.after_unload) {
+            _python_callbacks.after_unload(*target);
+        }
     }
     emit(ModuleEventKind::Unloaded, module_id);
     return true;
@@ -249,6 +283,17 @@ bool ModuleRuntime::reload_module(const std::string& module_id) {
         return false;
     }
 
+    std::shared_ptr<IModuleReloadState> reload_state;
+    if (current->spec.kind == ModuleKind::Cpp) {
+        if (_cpp_callbacks.capture_reload_state) {
+            reload_state = _cpp_callbacks.capture_reload_state(*current);
+        }
+    } else {
+        if (_python_callbacks.capture_reload_state) {
+            reload_state = _python_callbacks.capture_reload_state(*current);
+        }
+    }
+
     const bool was_loaded = current->state == ModuleState::Loaded;
     if (was_loaded && !unload_module(module_id)) {
         return false;
@@ -259,8 +304,32 @@ bool ModuleRuntime::reload_module(const std::string& module_id) {
     }
 
     const ModuleRecord* reloaded = find(module_id);
-    if (_integration && reloaded != nullptr) {
-        _integration->after_reload(*reloaded);
+    if (reloaded == nullptr) {
+        return false;
+    }
+
+    if (reloaded->spec.kind == ModuleKind::Cpp) {
+        if (_cpp_callbacks.restore_reload_state) {
+            std::string error;
+            if (!_cpp_callbacks.restore_reload_state(*reloaded, reload_state, error)) {
+                _last_error = error.empty() ? "Failed to restore C++ reload state" : error;
+                return false;
+            }
+        }
+        if (_cpp_callbacks.after_reload) {
+            _cpp_callbacks.after_reload(*reloaded);
+        }
+    } else {
+        if (_python_callbacks.restore_reload_state) {
+            std::string error;
+            if (!_python_callbacks.restore_reload_state(*reloaded, reload_state, error)) {
+                _last_error = error.empty() ? "Failed to restore Python reload state" : error;
+                return false;
+            }
+        }
+        if (_python_callbacks.after_reload) {
+            _python_callbacks.after_reload(*reloaded);
+        }
     }
 
     return true;
@@ -360,6 +429,14 @@ bool ModuleRuntime::should_skip(const ModuleSpec& spec) const {
 
     const auto config = std::dynamic_pointer_cast<PythonModuleConfig>(spec.config);
     return config && config->ignored;
+}
+
+const CppModuleCallbacks* ModuleRuntime::get_cpp_callbacks() const {
+    return &_cpp_callbacks;
+}
+
+const PythonModuleCallbacks* ModuleRuntime::get_python_callbacks() const {
+    return &_python_callbacks;
 }
 
 } // namespace termin_modules

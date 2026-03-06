@@ -54,11 +54,9 @@ void remove_sys_path(const std::filesystem::path& path) {
 
 bool PythonModuleBackend::load(
     ModuleRecord& record,
-    const ModuleEnvironment& environment,
-    IModuleIntegration* integration
+    const ModuleEnvironment& environment
 ) {
     (void)environment;
-    (void)integration;
 
     const auto config = std::dynamic_pointer_cast<PythonModuleConfig>(record.spec.config);
     if (!config) {
@@ -92,7 +90,7 @@ bool PythonModuleBackend::load(
             record.error_message = "Failed to import package '" + package + "': " + fetch_python_error();
             PyGILState_Release(gil);
             record.handle = handle;
-            unload(record, environment, integration);
+            unload(record, environment);
             return false;
         }
 
@@ -107,11 +105,9 @@ bool PythonModuleBackend::load(
 
 bool PythonModuleBackend::unload(
     ModuleRecord& record,
-    const ModuleEnvironment& environment,
-    IModuleIntegration* integration
+    const ModuleEnvironment& environment
 ) {
     (void)environment;
-    (void)integration;
 
     auto handle = std::dynamic_pointer_cast<PythonModuleHandle>(record.handle);
     if (!handle) {

@@ -1,7 +1,5 @@
 #include "termin_modules/module_cpp_backend.hpp"
 
-#include "termin_modules/module_integration.hpp"
-
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -72,11 +70,8 @@ void* resolve_symbol(void* handle, const char* name) {
 
 bool CppModuleBackend::load(
     ModuleRecord& record,
-    const ModuleEnvironment& environment,
-    IModuleIntegration* integration
+    const ModuleEnvironment& environment
 ) {
-    (void)integration;
-
     const auto config = std::dynamic_pointer_cast<CppModuleConfig>(record.spec.config);
     if (!config) {
         record.error_message = "Invalid C++ module config";
@@ -130,11 +125,9 @@ bool CppModuleBackend::load(
 
 bool CppModuleBackend::unload(
     ModuleRecord& record,
-    const ModuleEnvironment& environment,
-    IModuleIntegration* integration
+    const ModuleEnvironment& environment
 ) {
     (void)environment;
-    (void)integration;
 
     auto handle = std::dynamic_pointer_cast<CppModuleHandle>(record.handle);
     if (!handle) {

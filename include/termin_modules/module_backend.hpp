@@ -1,12 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include "termin_modules/module_types.hpp"
 
 namespace termin_modules {
-
-class IModuleIntegration;
 
 class IModuleBackend {
 public:
@@ -16,14 +12,12 @@ public:
 
     virtual bool load(
         ModuleRecord& record,
-        const ModuleEnvironment& environment,
-        IModuleIntegration* integration
+        const ModuleEnvironment& environment
     ) = 0;
 
     virtual bool unload(
         ModuleRecord& record,
-        const ModuleEnvironment& environment,
-        IModuleIntegration* integration
+        const ModuleEnvironment& environment
     ) = 0;
 };
 

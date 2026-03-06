@@ -17,7 +17,8 @@ public:
     using ModuleEventCallback = std::function<void(const ModuleEvent&)>;
 
     void set_environment(ModuleEnvironment environment);
-    void set_integration(std::shared_ptr<IModuleIntegration> integration);
+    void set_cpp_callbacks(CppModuleCallbacks callbacks);
+    void set_python_callbacks(PythonModuleCallbacks callbacks);
     void set_event_callback(ModuleEventCallback callback);
     void set_descriptor_parser(std::shared_ptr<ModuleDescriptorParser> parser);
     void register_backend(std::shared_ptr<IModuleBackend> backend);
@@ -35,6 +36,8 @@ public:
     const std::string& last_error() const;
 
 private:
+    const CppModuleCallbacks* get_cpp_callbacks() const;
+    const PythonModuleCallbacks* get_python_callbacks() const;
     bool build_load_order(std::vector<ModuleRecord*>& ordered, std::string& error);
     bool visit_module(
         ModuleRecord& record,
@@ -47,7 +50,8 @@ private:
     bool should_skip(const ModuleSpec& spec) const;
 
     ModuleEnvironment _environment;
-    std::shared_ptr<IModuleIntegration> _integration;
+    CppModuleCallbacks _cpp_callbacks;
+    PythonModuleCallbacks _python_callbacks;
     std::shared_ptr<ModuleDescriptorParser> _parser;
     std::unordered_map<ModuleKind, std::shared_ptr<IModuleBackend>> _backends;
     std::vector<ModuleRecord> _records;

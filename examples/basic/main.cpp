@@ -53,21 +53,6 @@ const char* state_to_string(ModuleState state) {
     return "unknown";
 }
 
-class ExampleIntegration : public IModuleIntegration {
-public:
-    void after_load(const ModuleRecord& record) override {
-        std::cout << "[integration] loaded " << record.spec.id << "\n";
-    }
-
-    void after_unload(const ModuleRecord& record) override {
-        std::cout << "[integration] unloaded " << record.spec.id << "\n";
-    }
-
-    void after_failed_load(const ModuleRecord& record, const std::string& error) override {
-        std::cout << "[integration] failed " << record.spec.id << ": " << error << "\n";
-    }
-};
-
 } // namespace
 
 int main(int argc, char** argv) {
@@ -83,7 +68,34 @@ int main(int argc, char** argv) {
         .sdk_prefix = std::filesystem::current_path(),
         .python_executable = "python3",
     });
-    runtime.set_integration(std::make_shared<ExampleIntegration>());
+    runtime.set_cpp_callbacks(CppModuleCallbacks{
+        .after_load = [](const ModuleRecord& record) {
+            std::cout << "[cpp] loaded " << record.spec.id << "\n";
+        },
+        .after_unload = [](const ModuleRecord& record) {
+            std::cout << "[cpp] unloaded " << record.spec.id << "\n";
+        },
+        .after_reload = [](const ModuleRecord& record) {
+            std::cout << "[cpp] reloaded " << record.spec.id << "\n";
+        },
+        .after_failed_load = [](const ModuleRecord& record, const std::string& error) {
+            std::cout << "[cpp] failed " << record.spec.id << ": " << error << "\n";
+        },
+    });
+    runtime.set_python_callbacks(PythonModuleCallbacks{
+        .after_load = [](const ModuleRecord& record) {
+            std::cout << "[python] loaded " << record.spec.id << "\n";
+        },
+        .after_unload = [](const ModuleRecord& record) {
+            std::cout << "[python] unloaded " << record.spec.id << "\n";
+        },
+        .after_reload = [](const ModuleRecord& record) {
+            std::cout << "[python] reloaded " << record.spec.id << "\n";
+        },
+        .after_failed_load = [](const ModuleRecord& record, const std::string& error) {
+            std::cout << "[python] failed " << record.spec.id << ": " << error << "\n";
+        },
+    });
     runtime.register_backend(std::make_shared<CppModuleBackend>());
     runtime.register_backend(std::make_shared<PythonModuleBackend>());
     runtime.set_event_callback([](const ModuleEvent& event) {

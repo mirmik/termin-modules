@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtermin_modules.a CMakeFiles/termin_modules.dir/src/module_cpp_backend.cpp.o CMakeFiles/termin_modules.dir/src/module_descriptor_parser.cpp.o CMakeFiles/termin_modules.dir/src/module_python_backend.cpp.o CMakeFiles/termin_modules.dir/src/module_runtime.cpp.o
-/usr/bin/ranlib libtermin_modules.a

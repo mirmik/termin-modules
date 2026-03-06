@@ -1,6 +1,0 @@
-{
-  "name": "python_demo",
-  "type": "python",
-  "root": ".",
-  "packages": ["python_demo"]
-}

@@ -42,7 +42,7 @@ if(NOT TARGET nanobind)
     nanobind_build_library(nanobind)
 endif()
 
-nanobind_add_module(_termin_modules_native
+nanobind_add_module(_termin_modules_native NB_SHARED
     python/bindings/termin_modules_module.cpp
 )
 

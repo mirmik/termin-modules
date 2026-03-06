@@ -13,15 +13,7 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 find_package(nanobind CONFIG REQUIRED)
-
-if(NOT TARGET tcbase::termin_base)
-    set(TERMIN_BASE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(TERMIN_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../termin-base ${CMAKE_CURRENT_BINARY_DIR}/termin-base)
-    if(TARGET termin_base AND NOT TARGET tcbase::termin_base)
-        add_library(tcbase::termin_base ALIAS termin_base)
-    endif()
-endif()
+find_package(termin_base REQUIRED)
 
 add_library(termin_modules STATIC
     src/module_cpp_backend.cpp

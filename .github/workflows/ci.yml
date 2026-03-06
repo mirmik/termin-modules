@@ -24,10 +24,18 @@ jobs:
       - name: Install Python dependencies
         run: pip install --upgrade pip setuptools wheel nanobind
 
+      - name: Download upstream SDKs
+        env:
+          GH_TOKEN: ${{ secrets.CLONETOKEN }}
+        run: |
+          gh release download sdk-latest -R ${{ github.repository_owner }}/termin-base -p sdk-base.tar.gz -D /tmp
+          sudo tar xzf /tmp/sdk-base.tar.gz -C /
+
       - name: Build C++ runtime and example
         run: |
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH=/opt/termin \
             -DPython_EXECUTABLE=$(which python3)
           cmake --build build --parallel
 
@@ -35,6 +43,8 @@ jobs:
         run: ./build/termin_modules_example
 
       - name: Build wheel
+        env:
+          CMAKE_PREFIX_PATH: /opt/termin
         run: pip wheel --no-build-isolation --no-deps -w dist .
 
       - name: Install wheel and import package

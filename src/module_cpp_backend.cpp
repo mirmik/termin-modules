@@ -171,12 +171,16 @@ bool CppModuleBackend::run_build_command(
 
     std::string full_command;
 #ifdef _WIN32
-    if (!environment.sdk_prefix.empty()) {
-        full_command += "set CMAKE_PREFIX_PATH=" + environment.sdk_prefix.string() + "&& ";
+    const std::filesystem::path prefix_path =
+        !environment.cmake_prefix_path.empty() ? environment.cmake_prefix_path : environment.sdk_prefix;
+    if (!prefix_path.empty()) {
+        full_command += "set CMAKE_PREFIX_PATH=" + prefix_path.string() + "&& ";
     }
 #else
-    if (!environment.sdk_prefix.empty()) {
-        full_command += "CMAKE_PREFIX_PATH=\"" + environment.sdk_prefix.string() + "\" ";
+    const std::filesystem::path prefix_path =
+        !environment.cmake_prefix_path.empty() ? environment.cmake_prefix_path : environment.sdk_prefix;
+    if (!prefix_path.empty()) {
+        full_command += "CMAKE_PREFIX_PATH=\"" + prefix_path.string() + "\" ";
     }
 #endif
     full_command += command;

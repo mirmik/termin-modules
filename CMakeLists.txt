@@ -7,6 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(cmake/TerminModule.cmake)
 
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
+execute_process(
+    COMMAND ${Python_EXECUTABLE} -m nanobind --cmake_dir
+    OUTPUT_VARIABLE nanobind_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+find_package(nanobind CONFIG REQUIRED)
 
 if(NOT TARGET tcbase::termin_base)
     set(TERMIN_BASE_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -25,6 +31,7 @@ add_library(termin_modules STATIC
 )
 
 target_compile_features(termin_modules PUBLIC cxx_std_20)
+set_target_properties(termin_modules PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(termin_modules
     PUBLIC
@@ -37,6 +44,23 @@ target_link_libraries(termin_modules
         tcbase::termin_base
         Python::Python
         ${CMAKE_DL_LIBS}
+)
+
+if(NOT TARGET nanobind)
+    nanobind_build_library(nanobind)
+endif()
+
+nanobind_add_module(_termin_modules_native
+    python/bindings/termin_modules_module.cpp
+)
+
+target_link_libraries(_termin_modules_native PRIVATE termin_modules)
+
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python/termin_modules)
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/python/termin_modules/__init__.py
+    ${CMAKE_CURRENT_BINARY_DIR}/python/termin_modules/__init__.py
+    COPYONLY
 )
 
 add_executable(termin_modules_example

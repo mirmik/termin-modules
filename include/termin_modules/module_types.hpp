@@ -69,8 +69,7 @@ struct ModuleRecord {
 
 struct ModuleEnvironment {
     std::filesystem::path sdk_prefix;
-    std::filesystem::path core_c_include_dir;
-    std::filesystem::path core_cpp_include_dir;
+    std::filesystem::path cmake_prefix_path;
     std::filesystem::path lib_dir;
     std::string python_executable;
     bool allow_python_package_install = false;
